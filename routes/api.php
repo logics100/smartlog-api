@@ -168,6 +168,15 @@ Route::middleware('auth:sanctum')->group(function () {
             'message' => 'Lecturer access granted.'
         ]);
     })->middleware('role:LECTURER');
+    // -------------------------------------------------------------------------
+    // Lecturer - Dashboard
+    // -------------------------------------------------------------------------
+
+    Route::get(
+        '/lecturer/dashboard',
+        [LecturerController::class, 'dashboard']
+    )->middleware('role:LECTURER');
+
 
 
     // -------------------------------------------------------------------------
