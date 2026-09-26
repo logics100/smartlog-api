@@ -747,6 +747,327 @@ class DashboardController extends Controller
         );
     }
         /**
+     * Show detailed progress for one student in one unit
+     * assigned to the logged-in lecturer.
+     */
+    public function lecturerStudentProgressShow($unitId, $studentId)
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->role !== 'LECTURER') {
+            abort(
+                403,
+                'You are not authorized to access Lecturer student progress.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Confirm Lecturer Is Assigned to the Unit
+        |--------------------------------------------------------------------------
+        */
+
+        $assigned = DB::table('lecturer_units')
+            ->where('lecturer_id', $user->id)
+            ->where('unit_id', $unitId)
+            ->exists();
+
+        if (!$assigned) {
+            abort(403, 'You are not assigned to this unit.');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Unit
+        |--------------------------------------------------------------------------
+        */
+
+        $unit = DB::table('units')
+            ->where('id', $unitId)
+            ->first();
+
+        if (!$unit) {
+            abort(404, 'Unit not found.');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Student Enrollment
+        |--------------------------------------------------------------------------
+        */
+
+        $enrollment = DB::table('enrollments')
+            ->join(
+                'users',
+                'enrollments.student_id',
+                '=',
+                'users.id'
+            )
+            ->where('enrollments.unit_id', $unitId)
+            ->where('enrollments.student_id', $studentId)
+            ->select(
+                'enrollments.id as enrollment_id',
+                'enrollments.status as enrollment_status',
+                'enrollments.enrollment_date',
+                'users.id as student_id',
+                'users.dwu_id',
+                'users.name',
+                'users.email',
+                'users.year_level_id'
+            )
+            ->first();
+
+        if (!$enrollment) {
+            abort(404, 'Student is not enrolled in this unit.');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Student Logbook
+        |--------------------------------------------------------------------------
+        */
+
+        $logbook = DB::table('student_logbooks')
+            ->join(
+                'logbook_templates',
+                'student_logbooks.logbook_template_id',
+                '=',
+                'logbook_templates.id'
+            )
+            ->where(
+                'student_logbooks.enrollment_id',
+                $enrollment->enrollment_id
+            )
+            ->select(
+                'student_logbooks.*',
+                'logbook_templates.template_name',
+                'logbook_templates.minimum_completion_percentage'
+            )
+            ->orderByDesc('student_logbooks.id')
+            ->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Defaults When No Logbook Is Assigned
+        |--------------------------------------------------------------------------
+        */
+
+        $clinicalEntries = collect();
+        $attendanceRecords = collect();
+
+        $completionPercentage = 0;
+        $minimumCompletionPercentage = 100;
+        $completionRequirementMet = false;
+        $completionStatus = 'NOT_STARTED';
+
+        $summary = [
+            'total_entries' => 0,
+            'draft_entries' => 0,
+            'pending_entries' => 0,
+            'verified_entries' => 0,
+            'rejected_entries' => 0,
+            'total_attendance_records' => 0,
+            'verified_attendance_records' => 0,
+            'verified_attendance_hours' => 0,
+        ];
+
+        if ($logbook) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Recalculate Existing SmartLog Completion
+            |--------------------------------------------------------------------------
+            */
+
+            $completionPercentage =
+                $this->recalculateLogbookCompletion(
+                    (int) $logbook->id
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Reload Logbook After Recalculation
+            |--------------------------------------------------------------------------
+            */
+
+            $logbook = DB::table('student_logbooks')
+                ->join(
+                    'logbook_templates',
+                    'student_logbooks.logbook_template_id',
+                    '=',
+                    'logbook_templates.id'
+                )
+                ->where(
+                    'student_logbooks.id',
+                    $logbook->id
+                )
+                ->select(
+                    'student_logbooks.*',
+                    'logbook_templates.template_name',
+                    'logbook_templates.minimum_completion_percentage'
+                )
+                ->first();
+
+            $minimumCompletionPercentage =
+                (float) (
+                    $logbook->minimum_completion_percentage
+                    ?? 100
+                );
+
+            $completionPercentage =
+                max(
+                    0,
+                    min(
+                        100,
+                        (float) $completionPercentage
+                    )
+                );
+
+            $completionRequirementMet =
+                $completionPercentage >=
+                $minimumCompletionPercentage;
+
+            if ($completionRequirementMet) {
+                $completionStatus =
+                    'COMPLETION_REQUIREMENT_MET';
+            } elseif ($completionPercentage > 0) {
+                $completionStatus = 'IN_PROGRESS';
+            } else {
+                $completionStatus = 'NOT_STARTED';
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Clinical Entries
+            |--------------------------------------------------------------------------
+            */
+
+            $clinicalEntries =
+                DB::table('clinical_entries')
+                    ->where(
+                        'student_logbook_id',
+                        $logbook->id
+                    )
+                    ->select(
+                        'id',
+                        'activity_date',
+                        'activity_time',
+                        'facility_name',
+                        'clinical_area',
+                        'activity_details',
+                        'competency_level',
+                        'status',
+                        'created_at',
+                        'updated_at'
+                    )
+                    ->orderByDesc('activity_date')
+                    ->orderByDesc('id')
+                    ->get();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Attendance Records
+            |--------------------------------------------------------------------------
+            */
+
+            $attendanceRecords =
+                DB::table('attendance_records')
+                    ->where(
+                        'student_logbook_id',
+                        $logbook->id
+                    )
+                    ->select(
+                        'id',
+                        'attendance_date',
+                        'facility_name',
+                        'clinical_unit',
+                        'start_time',
+                        'finish_time',
+                        'total_hours',
+                        'status',
+                        'created_at',
+                        'updated_at'
+                    )
+                    ->orderByDesc('attendance_date')
+                    ->orderByDesc('id')
+                    ->get();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Progress Summary
+            |--------------------------------------------------------------------------
+            */
+
+            $summary = [
+                'total_entries' =>
+                    $clinicalEntries->count(),
+
+                'draft_entries' =>
+                    $clinicalEntries
+                        ->where('status', 'DRAFT')
+                        ->count(),
+
+                'pending_entries' =>
+                    $clinicalEntries
+                        ->where(
+                            'status',
+                            'PENDING_VERIFICATION'
+                        )
+                        ->count(),
+
+                'verified_entries' =>
+                    $clinicalEntries
+                        ->where('status', 'VERIFIED')
+                        ->count(),
+
+                'rejected_entries' =>
+                    $clinicalEntries
+                        ->where('status', 'REJECTED')
+                        ->count(),
+
+                'total_attendance_records' =>
+                    $attendanceRecords->count(),
+
+                'verified_attendance_records' =>
+                    $attendanceRecords
+                        ->where('status', 'VERIFIED')
+                        ->count(),
+
+                'verified_attendance_hours' =>
+                    (float) $attendanceRecords
+                        ->where('status', 'VERIFIED')
+                        ->sum('total_hours'),
+            ];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Render Detailed Student Progress Page
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'web.lecturer.student-progress-show',
+            [
+                'user' => $user,
+                'student' => $enrollment,
+                'unit' => $unit,
+                'logbook' => $logbook,
+                'clinicalEntries' => $clinicalEntries,
+                'attendanceRecords' => $attendanceRecords,
+                'completionPercentage' =>
+                    $completionPercentage,
+                'minimumCompletionPercentage' =>
+                    $minimumCompletionPercentage,
+                'completionRequirementMet' =>
+                    $completionRequirementMet,
+                'completionStatus' =>
+                    $completionStatus,
+                'summary' => $summary,
+            ]
+        );
+    }
+        /**
      * Pending supervisor verifications for the logged-in lecturer.
      *
      * Only the latest verification request for each clinical entry or

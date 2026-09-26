@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Student Progress | SmartLog</title>
 
     <style>
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -204,7 +207,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1150px;
+            min-width: 1250px;
         }
 
         th {
@@ -337,6 +340,27 @@
         }
 
         /* ---------------------------------------------------------
+           View Progress Button
+        --------------------------------------------------------- */
+
+        .view-progress-btn {
+            display: inline-block;
+            padding: 8px 12px;
+            background: #005f3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+
+        .view-progress-btn:hover {
+            background: #00472d;
+        }
+
+        /* ---------------------------------------------------------
            Empty state
         --------------------------------------------------------- */
 
@@ -356,12 +380,15 @@
         --------------------------------------------------------- */
 
         @media (max-width: 1100px) {
+
             .summary-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
         }
 
         @media (max-width: 760px) {
+
             .sidebar {
                 position: relative;
                 width: 100%;
@@ -393,8 +420,11 @@
             .content {
                 padding: 18px;
             }
+
         }
+
     </style>
+
 </head>
 
 <body>
@@ -408,8 +438,11 @@
     <aside class="sidebar">
 
         <div class="brand">
+
             <h1>SmartLog</h1>
+
             <p>Lecturer Portal</p>
+
         </div>
 
         <nav class="nav">
@@ -450,17 +483,22 @@
         <header class="topbar">
 
             <div class="topbar-title">
+
                 <h2>Student Progress</h2>
 
                 <p>
                     Monitor clinical logbook progress for students
                     enrolled in your assigned units.
                 </p>
+
             </div>
 
             <div class="user-box">
+
                 <strong>{{ $user->name }}</strong>
+
                 <span>Lecturer</span>
+
             </div>
 
         </header>
@@ -474,6 +512,7 @@
             <div class="summary-grid">
 
                 <div class="summary-card">
+
                     <div class="label">
                         Students
                     </div>
@@ -481,9 +520,11 @@
                     <div class="value">
                         {{ $uniqueStudentsCount }}
                     </div>
+
                 </div>
 
                 <div class="summary-card">
+
                     <div class="label">
                         Logbooks
                     </div>
@@ -491,9 +532,11 @@
                     <div class="value">
                         {{ $logbooksCount }}
                     </div>
+
                 </div>
 
                 <div class="summary-card">
+
                     <div class="label">
                         Completed Logbooks
                     </div>
@@ -501,9 +544,11 @@
                     <div class="value">
                         {{ $completedLogbooksCount }}
                     </div>
+
                 </div>
 
                 <div class="summary-card">
+
                     <div class="label">
                         Pending Verifications
                     </div>
@@ -511,6 +556,7 @@
                     <div class="value">
                         {{ $pendingVerificationsCount }}
                     </div>
+
                 </div>
 
             </div>
@@ -524,12 +570,14 @@
                 <div class="section-header">
 
                     <div>
+
                         <h3>Clinical Logbook Progress</h3>
 
                         <p>
                             Progress information is shown only for
                             your assigned units.
                         </p>
+
                     </div>
 
                 </div>
@@ -554,16 +602,29 @@
                         <table>
 
                             <thead>
+
                                 <tr>
+
                                     <th>DWU ID</th>
+
                                     <th>Student</th>
+
                                     <th>Unit</th>
+
                                     <th>Logbook</th>
+
                                     <th>Completion</th>
+
                                     <th>Verified Entries</th>
+
                                     <th>Attendance</th>
+
                                     <th>Pending</th>
+
+                                    <th>Action</th>
+
                                 </tr>
+
                             </thead>
 
                             <tbody>
@@ -571,6 +632,7 @@
                             @foreach($students as $student)
 
                                 @php
+
                                     $completion =
                                         max(
                                             0,
@@ -598,6 +660,7 @@
                                                 ->pending_verifications
                                             ?? 0
                                         );
+
                                 @endphp
 
                                 <tr>
@@ -605,9 +668,11 @@
                                     <!-- DWU ID -->
 
                                     <td>
+
                                         <strong>
                                             {{ $student->dwu_id ?: '—' }}
                                         </strong>
+
                                     </td>
 
                                     <!-- Student -->
@@ -698,6 +763,7 @@
                                     <!-- Verified Entries -->
 
                                     <td>
+
                                         <strong>
                                             {{
                                                 (int) (
@@ -707,6 +773,7 @@
                                                 )
                                             }}
                                         </strong>
+
                                     </td>
 
                                     <!-- Attendance -->
@@ -764,6 +831,25 @@
 
                                     </td>
 
+                                    <!-- Action -->
+
+                                    <td>
+
+                                        <a
+                                            href="{{ route(
+                                                'web.lecturer.student-progress.show',
+                                                [
+                                                    'unitId' => $student->unit_id,
+                                                    'studentId' => $student->student_id,
+                                                ]
+                                            ) }}"
+                                            class="view-progress-btn"
+                                        >
+                                            View Progress
+                                        </a>
+
+                                    </td>
+
                                 </tr>
 
                             @endforeach
@@ -785,5 +871,5 @@
 </div>
 
 </body>
-</html>
 
+</html>
