@@ -41,8 +41,34 @@ class DashboardController extends Controller
         $pendingAttendanceVerifications = 0;
 
         if ($unitIds->isNotEmpty()) {
+            /*
+            |--------------------------------------------------------------------------
+            | Latest Clinical Verification IDs
+            |--------------------------------------------------------------------------
+            */
+
+            $latestClinicalVerificationIds =
+                DB::table('supervisor_verifications')
+                    ->whereNotNull('clinical_entry_id')
+                    ->select(
+                        'clinical_entry_id',
+                        DB::raw('MAX(id) as latest_verification_id')
+                    )
+                    ->groupBy('clinical_entry_id');
+
             $pendingClinicalVerifications =
                 DB::table('supervisor_verifications')
+                    ->joinSub(
+                        $latestClinicalVerificationIds,
+                        'latest_clinical_verifications',
+                        function ($join) {
+                            $join->on(
+                                'supervisor_verifications.id',
+                                '=',
+                                'latest_clinical_verifications.latest_verification_id'
+                            );
+                        }
+                    )
                     ->join(
                         'clinical_entries',
                         'supervisor_verifications.clinical_entry_id',
@@ -68,8 +94,34 @@ class DashboardController extends Controller
                     )
                     ->count();
 
+            /*
+            |--------------------------------------------------------------------------
+            | Latest Attendance Verification IDs
+            |--------------------------------------------------------------------------
+            */
+
+            $latestAttendanceVerificationIds =
+                DB::table('supervisor_verifications')
+                    ->whereNotNull('attendance_record_id')
+                    ->select(
+                        'attendance_record_id',
+                        DB::raw('MAX(id) as latest_verification_id')
+                    )
+                    ->groupBy('attendance_record_id');
+
             $pendingAttendanceVerifications =
                 DB::table('supervisor_verifications')
+                    ->joinSub(
+                        $latestAttendanceVerificationIds,
+                        'latest_attendance_verifications',
+                        function ($join) {
+                            $join->on(
+                                'supervisor_verifications.id',
+                                '=',
+                                'latest_attendance_verifications.latest_verification_id'
+                            );
+                        }
+                    )
                     ->join(
                         'attendance_records',
                         'supervisor_verifications.attendance_record_id',
