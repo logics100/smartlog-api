@@ -388,7 +388,7 @@
 
             <a href="{{ route('web.lecturer.verifications') }}">Pending Verifications</a>
 
-            <a href="#">
+            <a href="{{ route('web.lecturer.student-progress') }}">
                 Student Progress
             </a>
 
@@ -694,3 +694,5 @@
 
 </body>
 </html>
+
+

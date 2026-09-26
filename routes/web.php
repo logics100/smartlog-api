@@ -71,6 +71,17 @@ Route::middleware('auth')->group(function () {
         [DashboardController::class, 'lecturerStudents']
     )->name('web.lecturer.students');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Lecturer Student Progress
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/lecturer/student-progress',
+        [DashboardController::class, 'lecturerStudentProgress']
+    )->name('web.lecturer.student-progress');
+
 
     /*
     |--------------------------------------------------------------------------

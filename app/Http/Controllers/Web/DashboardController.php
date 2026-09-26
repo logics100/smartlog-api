@@ -337,8 +337,416 @@ class DashboardController extends Controller
             'assignedUnitsCount' => $assignedUnitsCount,
         ]);
     }
+        /**
+     * Student progress for students enrolled in units assigned
+     * to the logged-in lecturer.
+     */
+    public function lecturerStudentProgress()
+    {
+        $user = Auth::user();
 
-    /**
+        if (!$user || $user->role !== 'LECTURER') {
+            abort(
+                403,
+                'You are not authorized to access Lecturer student progress.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Units Assigned to Lecturer
+        |--------------------------------------------------------------------------
+        */
+
+        $unitIds = DB::table('lecturer_units')
+            ->where('lecturer_id', $user->id)
+            ->pluck('unit_id');
+
+        $students = collect();
+
+        if ($unitIds->isNotEmpty()) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Verified Clinical Entries
+            |--------------------------------------------------------------------------
+            */
+
+            $verifiedClinicalEntries =
+                DB::table('clinical_entries')
+                    ->select(
+                        'student_logbook_id',
+                        DB::raw('COUNT(*) as verified_entries')
+                    )
+                    ->where('status', 'VERIFIED')
+                    ->groupBy('student_logbook_id');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Attendance Summary
+            |--------------------------------------------------------------------------
+            */
+
+            $attendanceSummary =
+                DB::table('attendance_records')
+                    ->select(
+                        'student_logbook_id',
+                        DB::raw(
+                            'COUNT(*) as total_attendance_records'
+                        ),
+                        DB::raw(
+                            "SUM(CASE WHEN status = 'VERIFIED' " .
+                            "THEN 1 ELSE 0 END) " .
+                            'as verified_attendance_records'
+                        ),
+                        DB::raw(
+                            "SUM(CASE WHEN status = 'VERIFIED' " .
+                            "THEN COALESCE(total_hours, 0) " .
+                            "ELSE 0 END) " .
+                            'as verified_attendance_hours'
+                        )
+                    )
+                    ->groupBy('student_logbook_id');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Latest Clinical Verification IDs
+            |--------------------------------------------------------------------------
+            */
+
+            $latestClinicalVerificationIds =
+                DB::table('supervisor_verifications')
+                    ->whereNotNull('clinical_entry_id')
+                    ->select(
+                        'clinical_entry_id',
+                        DB::raw(
+                            'MAX(id) as latest_verification_id'
+                        )
+                    )
+                    ->groupBy('clinical_entry_id');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Pending Clinical Verifications
+            |--------------------------------------------------------------------------
+            */
+
+            $pendingClinicalVerifications =
+                DB::table('supervisor_verifications')
+                    ->joinSub(
+                        $latestClinicalVerificationIds,
+                        'latest_clinical_verifications',
+                        function ($join) {
+                            $join->on(
+                                'supervisor_verifications.id',
+                                '=',
+                                'latest_clinical_verifications.latest_verification_id'
+                            );
+                        }
+                    )
+                    ->join(
+                        'clinical_entries',
+                        'supervisor_verifications.clinical_entry_id',
+                        '=',
+                        'clinical_entries.id'
+                    )
+                    ->where(
+                        'supervisor_verifications.verification_status',
+                        'MANUAL_REVIEW'
+                    )
+                    ->select(
+                        'clinical_entries.student_logbook_id',
+                        DB::raw(
+                            'COUNT(*) as pending_clinical_verifications'
+                        )
+                    )
+                    ->groupBy(
+                        'clinical_entries.student_logbook_id'
+                    );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Latest Attendance Verification IDs
+            |--------------------------------------------------------------------------
+            */
+
+            $latestAttendanceVerificationIds =
+                DB::table('supervisor_verifications')
+                    ->whereNotNull('attendance_record_id')
+                    ->select(
+                        'attendance_record_id',
+                        DB::raw(
+                            'MAX(id) as latest_verification_id'
+                        )
+                    )
+                    ->groupBy('attendance_record_id');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Pending Attendance Verifications
+            |--------------------------------------------------------------------------
+            */
+
+            $pendingAttendanceVerifications =
+                DB::table('supervisor_verifications')
+                    ->joinSub(
+                        $latestAttendanceVerificationIds,
+                        'latest_attendance_verifications',
+                        function ($join) {
+                            $join->on(
+                                'supervisor_verifications.id',
+                                '=',
+                                'latest_attendance_verifications.latest_verification_id'
+                            );
+                        }
+                    )
+                    ->join(
+                        'attendance_records',
+                        'supervisor_verifications.attendance_record_id',
+                        '=',
+                        'attendance_records.id'
+                    )
+                    ->where(
+                        'supervisor_verifications.verification_status',
+                        'MANUAL_REVIEW'
+                    )
+                    ->select(
+                        'attendance_records.student_logbook_id',
+                        DB::raw(
+                            'COUNT(*) as pending_attendance_verifications'
+                        )
+                    )
+                    ->groupBy(
+                        'attendance_records.student_logbook_id'
+                    );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Student Progress Records
+            |--------------------------------------------------------------------------
+            */
+
+            $students =
+                DB::table('enrollments')
+                    ->join(
+                        'users',
+                        'enrollments.student_id',
+                        '=',
+                        'users.id'
+                    )
+                    ->join(
+                        'units',
+                        'enrollments.unit_id',
+                        '=',
+                        'units.id'
+                    )
+                    ->leftJoin(
+                        'student_logbooks',
+                        'enrollments.id',
+                        '=',
+                        'student_logbooks.enrollment_id'
+                    )
+                    ->leftJoinSub(
+                        $verifiedClinicalEntries,
+                        'verified_clinical_entries',
+                        function ($join) {
+                            $join->on(
+                                'student_logbooks.id',
+                                '=',
+                                'verified_clinical_entries.student_logbook_id'
+                            );
+                        }
+                    )
+                    ->leftJoinSub(
+                        $attendanceSummary,
+                        'attendance_summary',
+                        function ($join) {
+                            $join->on(
+                                'student_logbooks.id',
+                                '=',
+                                'attendance_summary.student_logbook_id'
+                            );
+                        }
+                    )
+                    ->leftJoinSub(
+                        $pendingClinicalVerifications,
+                        'pending_clinical',
+                        function ($join) {
+                            $join->on(
+                                'student_logbooks.id',
+                                '=',
+                                'pending_clinical.student_logbook_id'
+                            );
+                        }
+                    )
+                    ->leftJoinSub(
+                        $pendingAttendanceVerifications,
+                        'pending_attendance',
+                        function ($join) {
+                            $join->on(
+                                'student_logbooks.id',
+                                '=',
+                                'pending_attendance.student_logbook_id'
+                            );
+                        }
+                    )
+                    ->whereIn(
+                        'enrollments.unit_id',
+                        $unitIds
+                    )
+                    ->select(
+                        'users.id as student_id',
+                        'users.dwu_id',
+                        'users.name',
+                        'users.email',
+
+                        'units.id as unit_id',
+                        'units.unit_code',
+                        'units.unit_name',
+
+                        'enrollments.id as enrollment_id',
+                        'enrollments.status as enrollment_status',
+
+                        'student_logbooks.id as student_logbook_id',
+                        'student_logbooks.status as logbook_status',
+                        'student_logbooks.completion_percentage',
+
+                        DB::raw(
+                            'COALESCE(' .
+                            'verified_clinical_entries.verified_entries, 0' .
+                            ') as verified_entries'
+                        ),
+
+                        DB::raw(
+                            'COALESCE(' .
+                            'attendance_summary.total_attendance_records, 0' .
+                            ') as total_attendance_records'
+                        ),
+
+                        DB::raw(
+                            'COALESCE(' .
+                            'attendance_summary.verified_attendance_records, 0' .
+                            ') as verified_attendance_records'
+                        ),
+
+                        DB::raw(
+                            'COALESCE(' .
+                            'attendance_summary.verified_attendance_hours, 0' .
+                            ') as verified_attendance_hours'
+                        ),
+
+                        DB::raw(
+                            'COALESCE(' .
+                            'pending_clinical.pending_clinical_verifications, 0' .
+                            ') as pending_clinical_verifications'
+                        ),
+
+                        DB::raw(
+                            'COALESCE(' .
+                            'pending_attendance.pending_attendance_verifications, 0' .
+                            ') as pending_attendance_verifications'
+                        )
+                    )
+                    ->orderBy('users.name')
+                    ->orderBy('units.unit_code')
+                    ->get();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Normalize Values
+            |--------------------------------------------------------------------------
+            */
+
+            $students =
+                $students->map(function ($student) {
+                    $student->completion_percentage =
+                        max(
+                            0,
+                            min(
+                                100,
+                                (float) (
+                                    $student->completion_percentage
+                                    ?? 0
+                                )
+                            )
+                        );
+
+                    $student->verified_entries =
+                        (int) $student->verified_entries;
+
+                    $student->total_attendance_records =
+                        (int) $student->total_attendance_records;
+
+                    $student->verified_attendance_records =
+                        (int) $student->verified_attendance_records;
+
+                    $student->verified_attendance_hours =
+                        (float) $student->verified_attendance_hours;
+
+                    $student->pending_clinical_verifications =
+                        (int) $student
+                            ->pending_clinical_verifications;
+
+                    $student->pending_attendance_verifications =
+                        (int) $student
+                            ->pending_attendance_verifications;
+
+                    $student->pending_verifications =
+                        $student->pending_clinical_verifications +
+                        $student->pending_attendance_verifications;
+
+                    return $student;
+                });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Page Summary
+        |--------------------------------------------------------------------------
+        */
+
+        $uniqueStudentsCount =
+            $students
+                ->pluck('student_id')
+                ->unique()
+                ->count();
+
+        $logbooksCount =
+            $students
+                ->whereNotNull('student_logbook_id')
+                ->count();
+
+        $completedLogbooksCount =
+            $students
+                ->filter(function ($student) {
+                    return strtoupper(
+                        (string) (
+                            $student->logbook_status ?? ''
+                        )
+                    ) === 'COMPLETED';
+                })
+                ->count();
+
+        $pendingVerificationsCount =
+            $students->sum('pending_verifications');
+
+        return view(
+            'web.lecturer.student-progress',
+            [
+                'user' => $user,
+                'students' => $students,
+                'uniqueStudentsCount' =>
+                    $uniqueStudentsCount,
+                'logbooksCount' =>
+                    $logbooksCount,
+                'completedLogbooksCount' =>
+                    $completedLogbooksCount,
+                'pendingVerificationsCount' =>
+                    $pendingVerificationsCount,
+            ]
+        );
+    }
+        /**
      * Pending supervisor verifications for the logged-in lecturer.
      *
      * Only the latest verification request for each clinical entry or
@@ -618,8 +1026,7 @@ class DashboardController extends Controller
             'attendanceCount' => $attendanceCount,
         ]);
     }
-
-    /**
+        /**
      * Show one verification and its evidence.
      */
     public function lecturerVerificationReview($verificationId)
@@ -893,8 +1300,7 @@ class DashboardController extends Controller
             'referenceFaceUrl' => $referenceFaceUrl,
         ]);
     }
-
-    /**
+        /**
      * Lecturer approves or rejects one supervisor verification.
      */
     public function lecturerReviewVerification(
@@ -1205,8 +1611,7 @@ class DashboardController extends Controller
             ->route('web.lecturer.verifications')
             ->with('success', $message);
     }
-
-    /**
+        /**
      * HOD dashboard.
      */
     public function hod()

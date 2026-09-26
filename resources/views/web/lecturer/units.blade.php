@@ -358,11 +358,11 @@
                 My Units
             </a>
 
-            <a href="{{ route('web.lecturer.students') }}">`r`n                Students`r`n            </a>
+            <a href="{{ route('web.lecturer.students') }}">Students</a>
 
             <a href="{{ route('web.lecturer.verifications') }}">Pending Verifications</a>
 
-            <a href="#">
+            <a href="{{ route('web.lecturer.student-progress') }}">
                 Student Progress
             </a>
 
@@ -539,4 +539,7 @@
 
 </body>
 </html>
+
+
+
 

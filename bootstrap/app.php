@@ -12,10 +12,32 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-    $middleware->alias([
-        'role' => \App\Http\Middleware\RoleMiddleware::class,
-      ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | SmartLog Web Authentication Redirect
+        |--------------------------------------------------------------------------
+        |
+        | Unauthenticated web users should be sent to SmartLog's existing
+        | web login page instead of Laravel looking for route('login').
+        |
+        */
+
+        $middleware->redirectGuestsTo(
+            fn () => route('web.login')
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Middleware Aliases
+        |--------------------------------------------------------------------------
+        */
+
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->create();
