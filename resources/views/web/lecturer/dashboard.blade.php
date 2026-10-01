@@ -1,5 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,339 +8,937 @@
     <title>Lecturer Dashboard | SmartLog</title>
 
     <style>
+        :root {
+            --sl-navy: #082c63;
+            --sl-deep: #063b82;
+            --sl-blue: #087bea;
+            --sl-bright: #12b9ef;
+
+            --sl-bg: #f5f8fc;
+            --sl-surface: #ffffff;
+            --sl-soft: #edf6ff;
+
+            --sl-text: #14243b;
+            --sl-muted: #68778b;
+            --sl-border: #dfe8f2;
+
+            --sl-success: #16875d;
+            --sl-warning: #d58b16;
+
+            --sl-shadow:
+                0 12px 32px rgba(8, 44, 99, .08);
+        }
+
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f7f5;
-            color: #26352f;
+            margin: 0;
+            font-family:
+                Inter,
+                "Segoe UI",
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: var(--sl-bg);
+            color: var(--sl-text);
         }
+
+        /*
+        ------------------------------------------------------
+        KEEP ORIGINAL SIDEBAR FOR SHARED HAMBURGER SYSTEM
+        ------------------------------------------------------
+        The professional-theme include reads these real links.
+        It will hide the old sidebar visually.
+        */
 
         .app {
             min-height: 100vh;
-            display: flex;
         }
-
-        /* SIDEBAR */
 
         .sidebar {
             width: 260px;
             min-height: 100vh;
-            background: #005f3c;
+
+            background: var(--sl-navy);
             color: white;
-            padding: 28px 20px;
+
             position: fixed;
             left: 0;
             top: 0;
+
+            padding: 28px 20px;
         }
 
         .brand {
             padding: 5px 10px 28px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .brand h1 {
-            font-size: 28px;
-            margin-bottom: 5px;
+            margin: 0 0 5px;
+            font-size: 27px;
         }
 
         .brand p {
-            color: #cce8dc;
+            margin: 0;
+            color: #d9eaff;
             font-size: 13px;
         }
 
         .role-badge {
             display: inline-block;
+
             margin-top: 12px;
             padding: 6px 11px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.14);
-            font-size: 12px;
-            font-weight: bold;
+
+            border-radius: 999px;
+
+            background: rgba(255, 255, 255, .13);
+
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .08em;
         }
 
-        .navigation {
-            margin-top: 28px;
+        .smartlog-main-nav {
+            margin-top: 24px;
         }
 
-        .navigation a {
+        .smartlog-main-nav a {
             display: block;
+
+            color: #e8f3ff;
             text-decoration: none;
-            color: #e5f5ee;
+
             padding: 13px 14px;
-            border-radius: 8px;
             margin-bottom: 7px;
+
+            border-radius: 9px;
+
             font-size: 14px;
         }
 
-        .navigation a:hover,
-        .navigation a.active {
-            background: rgba(255, 255, 255, 0.14);
-            color: white;
+        .smartlog-main-nav a:hover,
+        .smartlog-main-nav a.active {
+            background: rgba(255, 255, 255, .13);
+            color: #fff;
         }
 
-        /* MAIN AREA */
+        /*
+        ------------------------------------------------------
+        MAIN DASHBOARD
+        ------------------------------------------------------
+        */
 
         .main {
-            margin-left: 260px;
-            width: calc(100% - 260px);
             min-height: 100vh;
         }
 
-        .topbar {
-            background: white;
-            min-height: 76px;
-            padding: 16px 30px;
-            border-bottom: 1px solid #e1e8e4;
+        .old-topbar {
+            display: none;
+        }
+
+        .dashboard-content {
+            width: min(1240px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 34px 0 55px;
+        }
+
+        /*
+        ------------------------------------------------------
+        PAGE INTRO
+        ------------------------------------------------------
+        */
+
+        .page-intro {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 25px;
+
+            margin-bottom: 24px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            margin-bottom: 8px;
+
+            color: var(--sl-blue);
+
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow-dot {
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: var(--sl-bright);
+
+            box-shadow:
+                0 0 0 5px rgba(18, 185, 239, .11);
+        }
+
+        .page-intro h1 {
+            margin: 0;
+
+            color: var(--sl-navy);
+
+            font-size: clamp(28px, 4vw, 42px);
+            line-height: 1.08;
+            letter-spacing: -.035em;
+        }
+
+        .page-intro p {
+            margin: 8px 0 0;
+
+            color: var(--sl-muted);
+
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .lecturer-chip {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 11px;
+
+            padding: 9px 13px 9px 9px;
+
+            border: 1px solid var(--sl-border);
+            border-radius: 999px;
+
+            background: white;
+
+            box-shadow: 0 5px 18px rgba(8, 44, 99, .05);
         }
 
-        .topbar-title h2 {
-            color: #174331;
-            font-size: 22px;
-            margin-bottom: 4px;
+        .lecturer-avatar {
+            width: 39px;
+            height: 39px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--sl-deep),
+                    var(--sl-bright)
+                );
+
+            font-weight: 800;
         }
 
-        .topbar-title p {
-            color: #7a8982;
+        .lecturer-chip strong {
+            display: block;
+
+            color: var(--sl-navy);
+
             font-size: 13px;
         }
 
-        .user-area {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .user-info {
-            text-align: right;
-        }
-
-        .user-info strong {
+        .lecturer-chip span {
             display: block;
-            color: #203d31;
-            font-size: 14px;
+
+            margin-top: 2px;
+
+            color: var(--sl-muted);
+
+            font-size: 11px;
         }
 
-        .user-info span {
-            color: #829087;
-            font-size: 12px;
+        /*
+        ------------------------------------------------------
+        HERO
+        ------------------------------------------------------
+        */
+
+        .hero {
+            min-height: 340px;
+
+            display: grid;
+            grid-template-columns: 1.08fr .92fr;
+
+            overflow: hidden;
+
+            border: 1px solid #dbe8f5;
+            border-radius: 28px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffffff 0%,
+                    #f2f8ff 100%
+                );
+
+            box-shadow: var(--sl-shadow);
+
+            margin-bottom: 24px;
         }
 
-        .logout-button {
-            border: none;
-            background: #edf5f1;
-            color: #006b45;
-            padding: 10px 14px;
-            border-radius: 7px;
-            font-weight: bold;
-            cursor: pointer;
+        .hero-copy {
+            position: relative;
+            z-index: 2;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            padding: 48px;
         }
 
-        .logout-button:hover {
-            background: #dfece6;
+        .hero-label {
+            display: inline-flex;
+            align-items: center;
+
+            width: fit-content;
+
+            margin-bottom: 17px;
+            padding: 7px 11px;
+
+            border-radius: 999px;
+
+            color: var(--sl-deep);
+            background: #e4f3ff;
+
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
         }
 
-        /* CONTENT */
+        .hero h2 {
+            max-width: 590px;
 
-        .content {
-            padding: 30px;
+            margin: 0;
+
+            color: var(--sl-navy);
+
+            font-size: clamp(31px, 4.3vw, 53px);
+            line-height: 1.02;
+            letter-spacing: -.045em;
         }
 
-        .welcome {
-            background: linear-gradient(135deg, #007a4d, #005f3c);
+        .hero h2 span {
+            color: var(--sl-blue);
+        }
+
+        .hero p {
+            max-width: 600px;
+
+            margin: 18px 0 25px;
+
+            color: var(--sl-muted);
+
+            font-size: 15px;
+            line-height: 1.75;
+        }
+
+        .hero-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 11px;
+        }
+
+        .primary-button,
+        .secondary-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+
+            min-height: 45px;
+
+            padding: 0 18px;
+
+            border-radius: 12px;
+
+            text-decoration: none;
+
+            font-size: 13px;
+            font-weight: 750;
+
+            transition:
+                transform .18s ease,
+                box-shadow .18s ease,
+                background .18s ease;
+        }
+
+        .primary-button {
             color: white;
-            padding: 30px;
-            border-radius: 14px;
-            margin-bottom: 28px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--sl-deep),
+                    var(--sl-blue)
+                );
+
+            box-shadow:
+                0 9px 22px rgba(8, 123, 234, .20);
         }
 
-        .welcome h3 {
-            font-size: 24px;
-            margin-bottom: 8px;
+        .secondary-button {
+            color: var(--sl-deep);
+
+            border: 1px solid #cfdfef;
+
+            background: white;
         }
 
-        .welcome p {
-            color: #dcf4e9;
-            line-height: 1.6;
-            font-size: 14px;
+        .primary-button:hover,
+        .secondary-button:hover {
+            transform: translateY(-2px);
         }
 
-        .cards {
+        .hero-photo {
+            position: relative;
+            min-height: 340px;
+
+            overflow: hidden;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #dceeff,
+                    #eef8ff
+                );
+        }
+
+        .hero-photo::before {
+            content: "";
+
+            position: absolute;
+            z-index: 2;
+
+            top: 0;
+            left: -1px;
+
+            width: 80px;
+            height: 100%;
+
+            background: white;
+
+            clip-path:
+                polygon(
+                    0 0,
+                    100% 0,
+                    30% 100%,
+                    0 100%
+                );
+
+            opacity: .97;
+        }
+
+        .hero-photo img {
+            width: 100%;
+            height: 100%;
+            min-height: 340px;
+
+            display: block;
+
+            object-fit: cover;
+            object-position: center;
+
+            filter:
+                contrast(1.02)
+                saturate(1.03);
+        }
+
+        .hero-photo-badge {
+            position: absolute;
+            z-index: 4;
+
+            right: 20px;
+            bottom: 20px;
+
+            max-width: 230px;
+
+            padding: 12px 14px;
+
+            border: 1px solid rgba(255, 255, 255, .55);
+            border-radius: 13px;
+
+            color: white;
+
+            background: rgba(6, 44, 99, .88);
+
+            box-shadow:
+                0 10px 24px rgba(0, 0, 0, .15);
+
+            backdrop-filter: blur(6px);
+
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        /*
+        ------------------------------------------------------
+        STATISTICS
+        ------------------------------------------------------
+        */
+
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 28px;
+            gap: 16px;
+
+            margin-bottom: 31px;
         }
 
-        .card {
+        .stat-card {
+            position: relative;
+
+            min-height: 155px;
+
+            overflow: hidden;
+
+            padding: 22px;
+
+            border: 1px solid var(--sl-border);
+            border-radius: 18px;
+
             background: white;
-            padding: 23px;
-            border-radius: 12px;
-            border: 1px solid #e3eae6;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.03);
+
+            box-shadow:
+                0 8px 22px rgba(8, 44, 99, .045);
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
         }
 
-        .card-label {
-            color: #74827b;
-            font-size: 13px;
-            margin-bottom: 12px;
+        .stat-card:hover {
+            transform: translateY(-3px);
+
+            box-shadow:
+                0 14px 28px rgba(8, 44, 99, .09);
         }
 
-        .card-value {
-            color: #075d3d;
-            font-size: 30px;
-            font-weight: bold;
+        .stat-card::after {
+            content: "";
+
+            position: absolute;
+
+            right: -28px;
+            top: -28px;
+
+            width: 105px;
+            height: 105px;
+
+            border-radius: 50%;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(8, 123, 234, .10),
+                    rgba(18, 185, 239, .04)
+                );
         }
 
-        .card-note {
-            color: #96a099;
-            font-size: 12px;
-            margin-top: 7px;
+        .stat-top {
+            position: relative;
+            z-index: 2;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+
+            margin-bottom: 18px;
         }
 
-        .section {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid #e3eae6;
-        }
+        .stat-icon {
+            width: 42px;
+            height: 42px;
 
-        .section h3 {
-            color: #174331;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .section p {
-            color: #6f7d76;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .feature-grid {
-            margin-top: 20px;
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            place-items: center;
+
+            border-radius: 12px;
+
+            color: var(--sl-deep);
+            background: var(--sl-soft);
+
+            font-size: 18px;
+            font-weight: 900;
         }
 
-        .feature {
-            background: #f6faf8;
-            border: 1px solid #e2ece7;
-            padding: 18px;
-            border-radius: 9px;
+        .stat-number {
+            color: var(--sl-navy);
+
+            font-size: 35px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -.035em;
         }
 
-        .feature strong {
-            display: block;
-            color: #12603f;
-            margin-bottom: 6px;
-            font-size: 14px;
+        .stat-title {
+            margin-bottom: 5px;
+
+            color: var(--sl-text);
+
+            font-size: 13px;
+            font-weight: 750;
         }
 
-        .feature span {
-            color: #75817b;
+        .stat-note {
+            color: var(--sl-muted);
+
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /*
+        ------------------------------------------------------
+        QUICK ACTIONS
+        ------------------------------------------------------
+        */
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 20px;
+
+            margin-bottom: 16px;
+        }
+
+        .section-heading h2 {
+            margin: 0;
+
+            color: var(--sl-navy);
+
+            font-size: 23px;
+            letter-spacing: -.025em;
+        }
+
+        .section-heading p {
+            margin: 5px 0 0;
+
+            color: var(--sl-muted);
+
             font-size: 13px;
             line-height: 1.5;
         }
 
-        @media (max-width: 900px) {
-            .sidebar {
-                width: 210px;
-            }
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
 
-            .main {
-                margin-left: 210px;
-                width: calc(100% - 210px);
-            }
+        .action-card {
+            position: relative;
 
-            .cards {
+            min-height: 195px;
+
+            display: flex;
+            flex-direction: column;
+
+            padding: 22px;
+
+            overflow: hidden;
+
+            border: 1px solid var(--sl-border);
+            border-radius: 19px;
+
+            color: inherit;
+            text-decoration: none;
+
+            background: white;
+
+            box-shadow:
+                0 8px 22px rgba(8, 44, 99, .045);
+
+            transition:
+                transform .2s ease,
+                border-color .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .action-card:hover {
+            transform: translateY(-4px);
+
+            border-color: #bad8f5;
+
+            box-shadow:
+                0 16px 30px rgba(8, 44, 99, .09);
+        }
+
+        .action-icon {
+            width: 46px;
+            height: 46px;
+
+            display: grid;
+            place-items: center;
+
+            margin-bottom: 22px;
+
+            border-radius: 13px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--sl-deep),
+                    var(--sl-blue)
+                );
+
+            box-shadow:
+                0 7px 17px rgba(8, 123, 234, .18);
+
+            font-size: 18px;
+            font-weight: 850;
+        }
+
+        .action-card h3 {
+            margin: 0 0 7px;
+
+            color: var(--sl-navy);
+
+            font-size: 16px;
+        }
+
+        .action-card p {
+            margin: 0;
+
+            color: var(--sl-muted);
+
+            font-size: 12.5px;
+            line-height: 1.55;
+        }
+
+        .action-arrow {
+            margin-top: auto;
+            padding-top: 17px;
+
+            color: var(--sl-blue);
+
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        .action-card.featured {
+            color: white;
+
+            border-color: transparent;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    var(--sl-navy),
+                    var(--sl-deep)
+                );
+        }
+
+        .action-card.featured h3,
+        .action-card.featured p,
+        .action-card.featured .action-arrow {
+            color: white;
+        }
+
+        .action-card.featured p {
+            color: #d7e9ff;
+        }
+
+        .action-card.featured .action-icon {
+            color: var(--sl-deep);
+            background: white;
+            box-shadow: none;
+        }
+
+        /*
+        ------------------------------------------------------
+        FOOTER NOTE
+        ------------------------------------------------------
+        */
+
+        .dashboard-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+
+            margin-top: 32px;
+            padding-top: 20px;
+
+            border-top: 1px solid var(--sl-border);
+
+            color: var(--sl-muted);
+
+            font-size: 11px;
+        }
+
+        /*
+        ------------------------------------------------------
+        RESPONSIVE
+        ------------------------------------------------------
+        */
+
+        @media (max-width: 1000px) {
+
+            .hero {
                 grid-template-columns: 1fr;
             }
 
-            .feature-grid {
-                grid-template-columns: 1fr;
+            .hero-photo {
+                min-height: 290px;
+            }
+
+            .hero-photo::before {
+                display: none;
+            }
+
+            .hero-photo img {
+                min-height: 290px;
+            }
+
+            .action-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        @media (max-width: 650px) {
-            .app {
-                display: block;
+        @media (max-width: 760px) {
+
+            .dashboard-content {
+                width: min(100% - 28px, 1240px);
+                padding-top: 24px;
             }
 
-            .sidebar {
-                position: relative;
-                width: 100%;
-                min-height: auto;
-            }
-
-            .main {
-                margin-left: 0;
-                width: 100%;
-            }
-
-            .topbar {
+            .page-intro {
                 align-items: flex-start;
-                gap: 20px;
                 flex-direction: column;
             }
 
-            .user-info {
-                text-align: left;
+            .lecturer-chip {
+                width: 100%;
             }
 
-            .content {
-                padding: 20px;
+            .hero {
+                border-radius: 20px;
+            }
+
+            .hero-copy {
+                padding: 30px 24px;
+            }
+
+            .hero h2 {
+                font-size: 36px;
+            }
+
+            .stats-grid,
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .primary-button,
+            .secondary-button {
+                width: 100%;
+            }
+
+            .dashboard-footer {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            .dashboard-content {
+                width: min(100% - 22px, 1240px);
+            }
+
+            .hero-copy {
+                padding: 26px 20px;
+            }
+
+            .hero h2 {
+                font-size: 31px;
+            }
+
+            .hero-photo,
+            .hero-photo img {
+                min-height: 235px;
+            }
+
+            .stat-card,
+            .action-card {
+                border-radius: 16px;
             }
         }
     </style>
+
+    @include('web.shared.professional-theme')
 </head>
 
 <body>
 
 <div class="app">
 
-    <!-- SIDEBAR -->
+    {{-- =====================================================
+         ORIGINAL NAVIGATION
+         Kept so the shared SmartLog hamburger can use it.
+         ===================================================== --}}
+
     <aside class="sidebar">
 
         <div class="brand">
-
             <h1>SmartLog</h1>
-
             <p>DWU Clinical Logbook</p>
-
-            <span class="role-badge">
-                LECTURER
-            </span>
-
+            <span class="role-badge">LECTURER</span>
         </div>
 
-        <nav class="navigation">
+        <nav class="smartlog-main-nav">
 
-            <a
-                href="{{ route('web.lecturer.dashboard') }}"
-                class="active"
-            >
+            <a href="{{ route('web.lecturer.dashboard') }}"
+               class="{{ request()->routeIs('web.lecturer.dashboard') ? 'active' : '' }}">
                 Dashboard
             </a>
 
-            <a href="{{ route('web.lecturer.units') }}">
+            <a href="{{ route('web.lecturer.units') }}"
+               class="{{ request()->routeIs('web.lecturer.units*') ? 'active' : '' }}">
                 My Units
             </a>
 
-            <a href="{{ route('web.lecturer.students') }}">Students</a>
+            <a href="{{ route('web.lecturer.students') }}"
+               class="{{ request()->routeIs('web.lecturer.students*') ? 'active' : '' }}">
+                Students
+            </a>
 
-            <a href="{{ route('web.lecturer.verifications') }}">Pending Verifications</a>
-
-            <a href="{{ route('web.lecturer.student-progress') }}">
+            <a href="{{ route('web.lecturer.student-progress') }}"
+               class="{{ request()->routeIs('web.lecturer.student-progress*') ? 'active' : '' }}">
                 Student Progress
+            </a>
+
+            <a href="{{ route('web.lecturer.verifications') }}"
+               class="{{ request()->routeIs('web.lecturer.verifications*') ? 'active' : '' }}">
+                Pending Verifications
+            </a>
+
+            <a href="{{ route('web.lecturer.logbooks') }}"
+               class="{{ request()->routeIs('web.lecturer.logbooks*') ? 'active' : '' }}">
+                Clinical Logbooks
             </a>
 
         </nav>
@@ -347,126 +946,189 @@
     </aside>
 
 
-    <!-- MAIN -->
     <main class="main">
 
-        <!-- TOP BAR -->
-        <header class="topbar">
+        {{-- Real logout form retained for shared header --}}
+        <header class="old-topbar">
 
-            <div class="topbar-title">
-
-                <h2>Lecturer Dashboard</h2>
-
-                <p>SmartLog Academic Portal</p>
-
+            <div>
+                <strong>{{ $user->name }}</strong>
+                <span>{{ $user->dwu_id }}</span>
             </div>
 
-            <div class="user-area">
-
-                <div class="user-info">
-
-                    <strong>
-                        {{ $user->name }}
-                    </strong>
-
-                    <span>
-                        {{ $user->dwu_id }}
-                    </span>
-
-                </div>
-
-                <form
-                    method="POST"
-                    action="{{ route('web.logout') }}"
-                >
-                    @csrf
-
-                    <button
-                        type="submit"
-                        class="logout-button"
-                    >
-                        Logout
-                    </button>
-
-                </form>
-
-            </div>
+            <form method="POST" action="{{ route('web.logout') }}">
+                @csrf
+                <button type="submit">
+                    Logout
+                </button>
+            </form>
 
         </header>
 
 
-        <!-- PAGE CONTENT -->
-        <div class="content">
+        <div class="dashboard-content">
 
-            <!-- WELCOME -->
-            <section class="welcome">
+            {{-- PAGE INTRO --}}
+            <section class="page-intro">
 
-                <h3>
-                    Welcome, {{ $user->name }}
-                </h3>
+                <div>
 
-                <p>
-                    Use the SmartLog Lecturer Portal to manage your
-                    practical units, monitor student clinical progress,
-                    review supervisor verification evidence and provide
-                    academic feedback.
-                </p>
+                    <div class="eyebrow">
+                        <span class="eyebrow-dot"></span>
+                        Lecturer Portal
+                    </div>
+
+                    <h1>Dashboard</h1>
+
+                    <p>
+                        Your clinical teaching workspace in SmartLog.
+                    </p>
+
+                </div>
+
+                <div class="lecturer-chip">
+
+                    <div class="lecturer-avatar">
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                    </div>
+
+                    <div>
+                        <strong>{{ $user->name }}</strong>
+                        <span>{{ $user->dwu_id }} · Lecturer</span>
+                    </div>
+
+                </div>
 
             </section>
 
 
-            <!-- LIVE SUMMARY CARDS -->
-            <section class="cards">
+            {{-- HERO --}}
+            <section class="hero">
 
-                <!-- MY UNITS -->
-                <div class="card">
+                <div class="hero-copy">
 
-                    <div class="card-label">
+                    <div class="hero-label">
+                        Clinical Learning
+                    </div>
+
+                    <h2>
+                        Welcome back,
+                        <span>{{ $user->name }}</span>
+                    </h2>
+
+                    <p>
+                        Manage your practical units, monitor student clinical
+                        progress, review supervisor verification evidence and
+                        manage clinical logbooks from one place.
+                    </p>
+
+                    <div class="hero-buttons">
+
+                        <a href="{{ route('web.lecturer.student-progress') }}"
+                           class="primary-button">
+                            View Student Progress
+                            <span>→</span>
+                        </a>
+
+                        <a href="{{ route('web.lecturer.verifications') }}"
+                           class="secondary-button">
+                            Review Verifications
+                        </a>
+
+                    </div>
+
+                </div>
+
+
+                <div class="hero-photo">
+
+                    <img
+                        src="{{ asset('images/smartlog/clinical-team.jpg') }}"
+                        alt="DWU clinical learning">
+
+                    <div class="hero-photo-badge">
+                        Supporting practical learning, clinical evidence and
+                        student progress through one digital logbook.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            {{-- LIVE STATISTICS --}}
+            <section class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+
+                        <div class="stat-icon">
+                            U
+                        </div>
+
+                        <div class="stat-number">
+                            {{ $myUnitsCount }}
+                        </div>
+
+                    </div>
+
+                    <div class="stat-title">
                         My Units
                     </div>
 
-                    <div class="card-value">
-                        {{ $myUnitsCount }}
-                    </div>
-
-                    <div class="card-note">
-                        Practical units assigned to you.
+                    <div class="stat-note">
+                        Practical units currently assigned to your lecturer account.
                     </div>
 
                 </div>
 
 
-                <!-- ENROLLED STUDENTS -->
-                <div class="card">
+                <div class="stat-card">
 
-                    <div class="card-label">
+                    <div class="stat-top">
+
+                        <div class="stat-icon">
+                            S
+                        </div>
+
+                        <div class="stat-number">
+                            {{ $enrolledStudentsCount }}
+                        </div>
+
+                    </div>
+
+                    <div class="stat-title">
                         Enrolled Students
                     </div>
 
-                    <div class="card-value">
-                        {{ $enrolledStudentsCount }}
-                    </div>
-
-                    <div class="card-note">
-                        Active students in your assigned units.
+                    <div class="stat-note">
+                        Active students enrolled across your assigned practical units.
                     </div>
 
                 </div>
 
 
-                <!-- PENDING VERIFICATIONS -->
-                <div class="card">
+                <div class="stat-card">
 
-                    <div class="card-label">
+                    <div class="stat-top">
+
+                        <div class="stat-icon">
+                            ✓
+                        </div>
+
+                        <div class="stat-number">
+                            {{ $pendingVerificationsCount }}
+                        </div>
+
+                    </div>
+
+                    <div class="stat-title">
                         Pending Verifications
                     </div>
 
-                    <div class="card-value">
-                        {{ $pendingVerificationsCount }}
-                    </div>
-
-                    <div class="card-note">
-                        Supervisor verifications waiting for your review.
+                    <div class="stat-note">
+                        Supervisor verification records waiting for lecturer review.
                     </div>
 
                 </div>
@@ -474,74 +1136,165 @@
             </section>
 
 
-            <!-- LECTURER FUNCTIONS -->
-            <section class="section">
+            {{-- QUICK ACTIONS --}}
+            <section>
 
-                <h3>Lecturer Functions</h3>
+                <div class="section-heading">
 
-                <p>
-                    The web portal uses the same SmartLog database
-                    already used by the mobile application.
-                </p>
+                    <div>
+                        <h2>Quick Actions</h2>
 
-                <div class="feature-grid">
-
-                    <div class="feature">
-
-                        <strong>
-                            My Units
-                        </strong>
-
-                        <span>
-                            View practical units assigned to your lecturer account.
-                        </span>
-
-                    </div>
-
-
-                    <div class="feature">
-
-                        <strong>
-                            Student Enrolment
-                        </strong>
-
-                        <span>
-                            Enrol eligible students into assigned practical units.
-                        </span>
-
-                    </div>
-
-
-                    <div class="feature">
-
-                        <strong>
-                            Verification Review
-                        </strong>
-
-                        <span>
-                            Review supervisor verification evidence and make the
-                            final lecturer approval or rejection decision.
-                        </span>
-
-                    </div>
-
-
-                    <div class="feature">
-
-                        <strong>
-                            Student Progress
-                        </strong>
-
-                        <span>
-                            Monitor student clinical activities, attendance and
-                            logbook progress.
-                        </span>
-
+                        <p>
+                            Access the Lecturer functions you use most.
+                        </p>
                     </div>
 
                 </div>
 
+
+                <div class="action-grid">
+
+                    <a class="action-card"
+                       href="{{ route('web.lecturer.units') }}">
+
+                        <div class="action-icon">
+                            U
+                        </div>
+
+                        <h3>My Units</h3>
+
+                        <p>
+                            View your assigned practical units and access
+                            students enrolled in each unit.
+                        </p>
+
+                        <div class="action-arrow">
+                            Open My Units →
+                        </div>
+
+                    </a>
+
+
+                    <a class="action-card"
+                       href="{{ route('web.lecturer.students') }}">
+
+                        <div class="action-icon">
+                            S
+                        </div>
+
+                        <h3>Students</h3>
+
+                        <p>
+                            View students enrolled in your practical units and
+                            access their SmartLog records.
+                        </p>
+
+                        <div class="action-arrow">
+                            View Students →
+                        </div>
+
+                    </a>
+
+
+                    <a class="action-card"
+                       href="{{ route('web.lecturer.student-progress') }}">
+
+                        <div class="action-icon">
+                            %
+                        </div>
+
+                        <h3>Student Progress</h3>
+
+                        <p>
+                            Monitor clinical activities, attendance and
+                            completion progress for student logbooks.
+                        </p>
+
+                        <div class="action-arrow">
+                            Monitor Progress →
+                        </div>
+
+                    </a>
+
+
+                    <a class="action-card featured"
+                       href="{{ route('web.lecturer.verifications') }}">
+
+                        <div class="action-icon">
+                            ✓
+                        </div>
+
+                        <h3>Verification Review</h3>
+
+                        <p>
+                            Review supervisor evidence and make the final
+                            lecturer decision on submitted verification records.
+                        </p>
+
+                        <div class="action-arrow">
+                            Review Verifications →
+                        </div>
+
+                    </a>
+
+
+                    <a class="action-card"
+                       href="{{ route('web.lecturer.logbooks') }}">
+
+                        <div class="action-icon">
+                            L
+                        </div>
+
+                        <h3>Clinical Logbooks</h3>
+
+                        <p>
+                            Create and manage digital clinical logbook templates
+                            for your assigned practical units.
+                        </p>
+
+                        <div class="action-arrow">
+                            Manage Logbooks →
+                        </div>
+
+                    </a>
+
+
+                    <a class="action-card"
+                       href="{{ route('web.lecturer.dashboard') }}">
+
+                        <div class="action-icon">
+                            ↻
+                        </div>
+
+                        <h3>Refresh Dashboard</h3>
+
+                        <p>
+                            Reload the dashboard to view the latest student,
+                            unit and verification information.
+                        </p>
+
+                        <div class="action-arrow">
+                            Refresh →
+                        </div>
+
+                    </a>
+
+                </div>
+
             </section>
+
+
+            <footer class="dashboard-footer">
+
+                <span>
+                    SmartLog · DWU Clinical Logbook System
+                </span>
+
+                <span>
+                    Lecturer Portal
+                </span>
+
+            </footer>
 
         </div>
 
@@ -551,7 +1304,3 @@
 
 </body>
 </html>
-
-
-
-

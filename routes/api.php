@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\HodController;
 use App\Http\Controllers\Api\LecturerController;
+use App\Http\Controllers\Api\LecturerLogbookController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\SupervisorVerificationController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,12 @@ Route::post('/login', [AuthController::class, 'login']);
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Native ICT Admin appearance management (same files as web portal).
+    Route::middleware('role:ICT_ADMIN')->group(function () {
+        Route::get('/admin/appearance', [\App\Http\Controllers\Api\AppearanceController::class, 'index']);
+        Route::post('/admin/appearance/{slot}', [\App\Http\Controllers\Api\AppearanceController::class, 'upload']);
+        Route::delete('/admin/appearance/{slot}', [\App\Http\Controllers\Api\AppearanceController::class, 'reset']);
+    });
 
     // -------------------------------------------------------------------------
     // Authentication
@@ -239,6 +246,66 @@ Route::middleware('auth:sanctum')->group(function () {
     )->middleware('role:LECTURER');
 
 
+
+    // -------------------------------------------------------------------------
+    // Lecturer - Clinical Logbook Builder
+    // -------------------------------------------------------------------------
+
+    Route::get(
+        '/lecturer/logbooks',
+        [LecturerLogbookController::class, 'index']
+    )->middleware('role:LECTURER');
+
+    Route::post(
+        '/lecturer/logbooks',
+        [LecturerLogbookController::class, 'store']
+    )->middleware('role:LECTURER');
+
+    Route::get(
+        '/lecturer/logbooks/{templateId}',
+        [LecturerLogbookController::class, 'show']
+    )->middleware('role:LECTURER');
+
+    Route::put(
+        '/lecturer/logbooks/{templateId}',
+        [LecturerLogbookController::class, 'update']
+    )->middleware('role:LECTURER');
+
+    Route::post(
+        '/lecturer/logbooks/{templateId}/assign',
+        [LecturerLogbookController::class, 'assign']
+    )->middleware('role:LECTURER');
+
+    Route::post(
+        '/lecturer/logbooks/{templateId}/sections',
+        [LecturerLogbookController::class, 'storeSection']
+    )->middleware('role:LECTURER');
+
+    Route::put(
+        '/lecturer/logbooks/{templateId}/sections/{sectionId}',
+        [LecturerLogbookController::class, 'updateSection']
+    )->middleware('role:LECTURER');
+
+    Route::post(
+        '/lecturer/logbooks/{templateId}/sections/{sectionId}/items',
+        [LecturerLogbookController::class, 'storeItem']
+    )->middleware('role:LECTURER');
+
+    Route::put(
+        '/lecturer/logbooks/{templateId}/items/{itemId}',
+        [LecturerLogbookController::class, 'updateItem']
+    )->middleware('role:LECTURER');
+
+    Route::post(
+        '/lecturer/logbooks/{templateId}/items/{itemId}/requirements',
+        [LecturerLogbookController::class, 'storeRequirement']
+    )->middleware('role:LECTURER');
+
+    Route::put(
+        '/lecturer/logbooks/{templateId}/requirements/{requirementId}',
+        [LecturerLogbookController::class, 'updateRequirement']
+    )->middleware('role:LECTURER');
+
     // =========================================================================
     // HOD
     // =========================================================================
@@ -412,5 +479,26 @@ Route::put(
     'auth:sanctum',
     'role:ICT_ADMIN',
 ]);
+// ICT Admin - Lecturer Unit Assignments
+
+Route::get(
+    '/admin/enrollments',
+    [\App\Http\Controllers\Api\AdminEnrollmentMonitorController::class, 'index']
+)->middleware('role:ICT_ADMIN');
+
+Route::get(
+    '/admin/unit-assignments',
+    [\App\Http\Controllers\Api\AdminLecturerAssignmentController::class, 'index']
+)->middleware('role:ICT_ADMIN');
+
+Route::post(
+    '/admin/unit-assignments',
+    [\App\Http\Controllers\Api\AdminLecturerAssignmentController::class, 'store']
+)->middleware('role:ICT_ADMIN');
+
+Route::delete(
+    '/admin/unit-assignments/{id}',
+    [\App\Http\Controllers\Api\AdminLecturerAssignmentController::class, 'destroy']
+)->middleware('role:ICT_ADMIN');
 
 });

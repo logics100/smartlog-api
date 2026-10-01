@@ -1,0 +1,22 @@
+@php($title = $title ?? 'ICT Admin | SmartLog')
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{{ $title }}</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7f5;color:#18352a}.shell{display:flex;min-height:100vh}.side{width:245px;background:#075d3d;color:white;padding:24px 18px;position:fixed;inset:0 auto 0 0}.brand{font-size:26px;font-weight:800;margin-bottom:4px}.sub{font-size:12px;opacity:.8;margin-bottom:26px}.nav a{display:block;color:white;text-decoration:none;padding:12px 14px;border-radius:9px;margin:6px 0}.nav a:hover,.nav a.active{background:rgba(255,255,255,.16)}.main{margin-left:245px;width:calc(100% - 245px)}.top{background:white;border-bottom:1px solid #dde7e1;padding:18px 28px;display:flex;justify-content:space-between;align-items:center}.content{padding:28px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}.card{background:white;border:1px solid #dfe8e3;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}.num{font-size:30px;font-weight:800;color:#075d3d}.muted{color:#687b72;font-size:13px}.btn{display:inline-block;border:0;border-radius:8px;padding:10px 14px;background:#075d3d;color:white;text-decoration:none;cursor:pointer}.btn.gray{background:#66756e}.btn.small{padding:7px 10px;font-size:12px}.filters,.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field input,.field select{padding:10px;border:1px solid #ccd8d1;border-radius:8px;background:white}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;margin-top:12px}.table th,.table td{padding:11px;border-bottom:1px solid #e6ece8;text-align:left;white-space:nowrap}.table th{font-size:12px;color:#52675e}.badge{padding:5px 9px;border-radius:999px;background:#e9f5ef;color:#075d3d;font-size:12px;font-weight:700}.badge.off{background:#f3e8e8;color:#8b2f2f}.alert{padding:12px 15px;border-radius:9px;margin-bottom:15px}.ok{background:#e6f5ec;color:#155b35}.err{background:#fdecec;color:#8b2222}.actions{display:flex;gap:8px;align-items:center}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:22px 0 12px}.section-title h2{margin:0}.logout{background:none;border:1px solid #d7e1dc;padding:8px 12px;border-radius:8px;cursor:pointer}@media(max-width:800px){.side{position:static;width:100%}.shell{display:block}.main{margin:0;width:100%}.nav{display:flex;overflow:auto}.nav a{white-space:nowrap}.content{padding:16px}}
+</style>@include('web.shared.professional-theme')
+@include('web.shared.admin-modern-ui')
+
+</head><body><div class="shell"><aside class="side"><div class="brand">SmartLog</div><div class="sub">ICT ADMINISTRATOR</div><nav class="nav">
+<a href="{{ route('web.admin.dashboard') }}" class="{{ request()->routeIs('web.admin.dashboard')?'active':'' }}">Dashboard</a>
+<a href="{{ route('web.admin.users') }}" class="{{ request()->routeIs('web.admin.users*')?'active':'' }}">User Management</a>
+<a href="{{ route('web.admin.departments') }}" class="{{ request()->routeIs('web.admin.departments*')?'active':'' }}">Departments</a>
+<a href="{{ route('web.admin.units') }}" class="{{ request()->routeIs('web.admin.units*')?'active':'' }}">Units</a>
+<a href="{{ route('web.admin.appearance') }}"
+   class="{{ request()->routeIs('web.admin.appearance*') ? 'active' : '' }}">
+    Appearance & Images
+</a>
+<a href="{{ route('web.admin.system-overview') }}" class="{{ request()->routeIs('web.admin.system-overview')?'active':'' }}">System Overview</a>
+</nav></aside><main class="main"><header class="top"><div><strong>{{ $title }}</strong><div class="muted">{{ $user->name }} · {{ $user->dwu_id }}</div></div><form method="POST" action="{{ route('web.logout') }}">@csrf<button class="logout">Logout</button></form></header><section class="content">
+@if(session('success'))<div class="alert ok">{{ session('success') }}</div>@endif
+@if(session('error'))<div class="alert err">{{ session('error') }}</div>@endif
+@if($errors->any())<div class="alert err"><strong>Please fix:</strong><ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
+@yield('content')</section></main></div></body></html>

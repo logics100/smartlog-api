@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>HOD Dashboard | SmartLog</title>
+<title>Student Progress | SmartLog</title>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;background:#f4f7f5;color:#26352f}
@@ -34,38 +34,25 @@
 <div class="app">
 <aside class="sidebar">
 <div class="brand"><h1>SmartLog</h1><p>DWU Clinical Logbook System</p><span class="badge">Head of Department</span><br><span class="badge white">READ-ONLY ACCESS</span></div>
-<nav class="nav"><a href="{{ route('web.hod.dashboard') }}" class="active">Dashboard</a>
-<a href="{{ route('web.hod.students') }}">Students</a>
+<nav class="nav"><a href="{{ route('web.hod.dashboard') }}">Dashboard</a>
+<a href="{{ route('web.hod.students') }}" class="active">Students</a>
 <a href="{{ route('web.hod.lecturers') }}">Teaching Staff</a>
 <a href="{{ route('web.hod.units') }}">Units</a>
 <a href="{{ route('web.hod.year-levels') }}">Year Levels</a></nav>
 <div class="sidebar-user"><strong>{{ $user->name ?? 'HOD' }}</strong><span>{{ $user->dwu_id ?? 'DWU' }}</span>
 <form method="POST" action="{{ route('web.logout') }}">@csrf<button class="logout" type="submit">Logout</button></form></div>
 </aside>
-<main class="main"><header class="topbar"><div><h2>HOD Dashboard</h2><p>Department clinical activity and student progress monitoring</p></div><div class="role">Department Monitoring</div></header>
+<main class="main"><header class="topbar"><div><h2>Student Progress</h2><p>Individual student clinical logbook monitoring</p></div><div class="role">Department Monitoring</div></header>
 <div class="content"><div class="notice"><strong>Read-Only Access:</strong> This page is for department monitoring only. HODs cannot approve verifications, enroll students, assign units or modify clinical records.</div>
 
-<section class="cards">
-<div class="card"><div class="label">Students</div><div class="value">{{ $summary['total_students'] ?? 0 }}</div><div class="desc">Active department students</div></div>
-<div class="card"><div class="label">Teaching Staff</div><div class="value">{{ $summary['total_lecturers'] ?? 0 }}</div><div class="desc">Active lecturers</div></div>
-<div class="card"><div class="label">Units</div><div class="value">{{ $summary['total_units'] ?? 0 }}</div><div class="desc">Active department units</div></div>
-<div class="card"><div class="label">Enrollments</div><div class="value">{{ $summary['total_enrollments'] ?? 0 }}</div><div class="desc">Department unit enrollments</div></div>
-</section>
-<section class="grid2">
-<div class="panel"><h3>Logbook Progress</h3>
-<div class="stat"><span>Total</span><strong>{{ $logbooks['total'] ?? 0 }}</strong></div><div class="stat"><span>Active</span><strong>{{ $logbooks['active'] ?? 0 }}</strong></div><div class="stat"><span>Completed</span><strong>{{ $logbooks['completed'] ?? 0 }}</strong></div><div class="stat"><span>Submitted</span><strong>{{ $logbooks['submitted'] ?? 0 }}</strong></div>
-@php($avg=max(0,min(100,(float)($logbooks['average_completion_percentage']??0))))
-<div class="stat"><span>Average Completion</span><strong>{{ number_format($avg,1) }}%</strong></div><div class="progress"><div class="bar" style="width:{{ $avg }}%"></div></div>
-</div>
-<div class="panel"><h3>Clinical Entries</h3>
-<div class="stat"><span>Total</span><strong>{{ $clinicalEntries['total'] ?? 0 }}</strong></div><div class="stat"><span>Verified</span><strong>{{ $clinicalEntries['verified'] ?? 0 }}</strong></div><div class="stat"><span>Pending</span><strong>{{ $clinicalEntries['pending_verification'] ?? 0 }}</strong></div><div class="stat"><span>Draft</span><strong>{{ $clinicalEntries['draft'] ?? 0 }}</strong></div><div class="stat"><span>Rejected</span><strong>{{ $clinicalEntries['rejected'] ?? 0 }}</strong></div>
-</div></section>
-<div class="panel"><h3>Year Level Progress</h3>
-@if(isset($yearLevels) && $yearLevels->count())
-<div class="grid2">@foreach($yearLevels as $y) @php($p=max(0,min(100,(float)($y['average_completion_percentage']??0))))
-<div class="card"><strong>{{ $y['year_name'] ?? 'Year Level' }}</strong><div class="stat"><span>Students</span><strong>{{ $y['student_count'] ?? 0 }}</strong></div><div class="stat"><span>Units</span><strong>{{ $y['unit_count'] ?? 0 }}</strong></div><div class="stat"><span>Average</span><strong>{{ number_format($p,1) }}%</strong></div><div class="progress"><div class="bar" style="width:{{ $p }}%"></div></div></div>
-@endforeach</div>@else<div class="empty">No year-level progress information is available yet.</div>@endif
-</div>
+<a class="btn secondary" href="{{ route('web.hod.students') }}">Back to Students</a>
+<div class="panel" style="margin-top:18px"><h3>{{ $student->name }}</h3><div class="grid2"><div><div class="stat"><span>DWU ID</span><strong>{{ $student->dwu_id }}</strong></div><div class="stat"><span>Email</span><strong>{{ $student->email }}</strong></div></div><div><div class="stat"><span>Year Level</span><strong>{{ $student->year_name ?? '—' }}</strong></div><div class="stat"><span>Phone</span><strong>{{ $student->phone ?? '—' }}</strong></div></div></div></div>
+<section class="cards"><div class="card"><div class="label">Enrollments</div><div class="value">{{ $summary['enrollments'] ?? 0 }}</div></div><div class="card"><div class="label">Logbooks</div><div class="value">{{ $summary['logbooks'] ?? 0 }}</div></div><div class="card"><div class="label">Clinical Entries</div><div class="value">{{ $summary['clinical_entries'] ?? 0 }}</div></div><div class="card"><div class="label">Verified Hours</div><div class="value">{{ number_format($summary['verified_attendance_hours'] ?? 0,1) }}</div></div></section>
+<div class="table-wrap"><table><thead><tr><th>Unit</th><th>Enrollment</th><th>Logbook</th><th>Progress</th><th>Clinical Entries</th><th>Verified</th><th>Pending</th><th>Attendance</th><th>Verified Hours</th></tr></thead><tbody>
+@forelse($enrollments as $e) @php($p=max(0,min(100,(float)($e->completion_percentage??0))))
+<tr><td><strong>{{ $e->unit_code }}</strong><div class="muted">{{ $e->unit_name }}</div></td><td>{{ $e->enrollment_status }}</td><td>{{ $e->template_name ?? 'No logbook' }}<div class="muted">{{ $e->logbook_status ?? '—' }}</div></td><td>{{ number_format($p,1) }}%<div class="progress"><div class="bar" style="width:{{ $p }}%"></div></div></td><td>{{ $e->clinical_entries }}</td><td>{{ $e->verified_entries }}</td><td>{{ $e->pending_entries }}</td><td>{{ $e->attendance_records }}</td><td>{{ number_format($e->verified_attendance_hours,1) }}</td></tr>
+@empty<tr><td colspan="9" class="empty">No enrollment progress found.</td></tr>@endforelse
+</tbody></table></div>
 
 <div class="footer">DWU Smart Clinical Logbook System - HOD Read-Only Portal</div></div></main>
 </div></body></html>

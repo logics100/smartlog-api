@@ -8,6 +8,146 @@ use Illuminate\Support\Facades\DB;
 
 class LecturerController extends Controller
 {
+    public function dashboard(Request $request)
+    {
+        $lecturer = $request->user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Assigned Units
+        |--------------------------------------------------------------------------
+        */
+
+        $unitIds = DB::table('lecturer_units')
+            ->where('lecturer_id', $lecturer->id)
+            ->pluck('unit_id');
+
+        $unitsCount = $unitIds->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Students
+        |--------------------------------------------------------------------------
+        | Count unique active students enrolled in the lecturer's assigned units.
+        */
+
+        $studentsCount = 0;
+
+        if ($unitIds->isNotEmpty()) {
+            $studentsCount = DB::table('enrollments')
+                ->whereIn('unit_id', $unitIds)
+                ->where('status', 'ACTIVE')
+                ->distinct()
+                ->count('student_id');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pending Verifications
+        |--------------------------------------------------------------------------
+        | Only the latest verification for each clinical entry or attendance
+        | record is considered. A verification is pending when its latest
+        | verification_status is MANUAL_REVIEW.
+        */
+
+        $pendingClinical = 0;
+        $pendingAttendance = 0;
+
+        if ($unitIds->isNotEmpty()) {
+            $latestClinicalVerificationIds = DB::table('supervisor_verifications')
+                ->whereNotNull('clinical_entry_id')
+                ->selectRaw('MAX(id) as id')
+                ->groupBy('clinical_entry_id');
+
+            $pendingClinical = DB::table('supervisor_verifications')
+                ->join(
+                    'clinical_entries',
+                    'supervisor_verifications.clinical_entry_id',
+                    '=',
+                    'clinical_entries.id'
+                )
+                ->join(
+                    'student_logbooks',
+                    'clinical_entries.student_logbook_id',
+                    '=',
+                    'student_logbooks.id'
+                )
+                ->join(
+                    'enrollments',
+                    'student_logbooks.enrollment_id',
+                    '=',
+                    'enrollments.id'
+                )
+                ->whereIn(
+                    'supervisor_verifications.id',
+                    $latestClinicalVerificationIds
+                )
+                ->whereIn('enrollments.unit_id', $unitIds)
+                ->where(
+                    'supervisor_verifications.verification_status',
+                    'MANUAL_REVIEW'
+                )
+                ->count();
+
+            $latestAttendanceVerificationIds = DB::table('supervisor_verifications')
+                ->whereNotNull('attendance_record_id')
+                ->selectRaw('MAX(id) as id')
+                ->groupBy('attendance_record_id');
+
+            $pendingAttendance = DB::table('supervisor_verifications')
+                ->join(
+                    'attendance_records',
+                    'supervisor_verifications.attendance_record_id',
+                    '=',
+                    'attendance_records.id'
+                )
+                ->join(
+                    'student_logbooks',
+                    'attendance_records.student_logbook_id',
+                    '=',
+                    'student_logbooks.id'
+                )
+                ->join(
+                    'enrollments',
+                    'student_logbooks.enrollment_id',
+                    '=',
+                    'enrollments.id'
+                )
+                ->whereIn(
+                    'supervisor_verifications.id',
+                    $latestAttendanceVerificationIds
+                )
+                ->whereIn('enrollments.unit_id', $unitIds)
+                ->where(
+                    'supervisor_verifications.verification_status',
+                    'MANUAL_REVIEW'
+                )
+                ->count();
+        }
+
+        $pendingVerifications =
+            $pendingClinical + $pendingAttendance;
+
+        return response()->json([
+            'lecturer' => [
+                'id' => $lecturer->id,
+                'name' => $lecturer->name,
+                'dwu_id' => $lecturer->dwu_id,
+            ],
+
+            'summary' => [
+                'my_units' => $unitsCount,
+                'enrolled_students' => $studentsCount,
+                'pending_verifications' => $pendingVerifications,
+            ],
+
+            // Keep direct values for compatibility with existing mobile code.
+            'units' => $unitsCount,
+            'students' => $studentsCount,
+            'pending_verifications' => $pendingVerifications,
+        ]);
+    }
+
     public function myUnits(Request $request)
     {
         $lecturer = $request->user();

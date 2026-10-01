@@ -15,17 +15,35 @@ return Application::configure(basePath: dirname(__DIR__))
 
         /*
         |--------------------------------------------------------------------------
-        | SmartLog Web Authentication Redirect
+        | SmartLog Web Authentication Redirects
         |--------------------------------------------------------------------------
         |
-        | Unauthenticated web users should be sent to SmartLog's existing
-        | web login page instead of Laravel looking for route('login').
+        | Guests are sent to the SmartLog login page.
+        |
+        | If Laravel's guest middleware detects an authenticated user,
+        | send that request to the correct SmartLog dashboard instead of "/".
         |
         */
 
         $middleware->redirectGuestsTo(
             fn () => route('web.login')
         );
+
+        $middleware->redirectUsersTo(function ($request) {
+
+            $user = $request->user();
+
+            if (!$user) {
+                return route('web.login');
+            }
+
+            return match ($user->role) {
+                'LECTURER' => route('web.lecturer.dashboard'),
+                'HOD' => route('web.hod.dashboard'),
+                'ICT_ADMIN' => route('web.admin.dashboard'),
+                default => route('web.login'),
+            };
+        });
 
         /*
         |--------------------------------------------------------------------------

@@ -22,3 +22,53 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# =========================================================
+# SmartLog local development / backup files
+# =========================================================
+
+# Local backup copies
+*-BACKUP*
+*.backup_*
+*.before-*
+*.BEFORE-*
+*.WRONG-*
+*.LOGO-BACKUP
+*.APPEARANCE-BACKUP-*
+
+# SmartLog temporary/local status files
+/storage/*-ui-current.txt
+/storage/smartlog-current-login.blade.txt
+
+# Database exports - NEVER commit real database data
+*.sql
+*.sql.gz
+
+# Environment/secrets
+.env
+.env.*
+!.env.example
+
+# IDE/local tooling
+/.vscode/
+/.idea/
+
+# Flutter/Android packages if accidentally copied here
+.dart_tool/
+build/
+
+
+# =========================================================
+# SmartLog - ignore ALL local backup variants
+# =========================================================
+*BACKUP*
+*backup*
+*.before-*
+*.BEFORE-*
+*WRONG*
+
+# Local SmartLog temporary files
+/storage/admin-ui-current.txt
+/storage/hod-ui-current.txt
+/storage/smartlog-current-login.blade.txt
+

@@ -425,6 +425,110 @@
 
     </style>
 
+
+<style id="smartlog-stable-sidebar">
+/* Keep Lecturer navigation in exactly the same position on every page */
+.sidebar,
+.lecturer-sidebar {
+    width: 260px !important;
+    padding: 28px 20px !important;
+}
+
+.brand,
+.lecturer-brand {
+    padding: 5px 10px 28px !important;
+}
+
+.navigation,
+.lecturer-nav {
+    margin-top: 28px !important;
+}
+
+.navigation a,
+.lecturer-nav a {
+    display: block !important;
+    width: 100% !important;
+    height: 42px !important;
+    padding: 13px 14px !important;
+    margin: 0 0 7px 0 !important;
+    border-radius: 8px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: normal !important;
+    line-height: 16px !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+}
+
+.navigation a.active,
+.lecturer-nav a.active {
+    font-weight: normal !important;
+}
+
+.role-badge,
+.lecturer-role {
+    height: 25px !important;
+    line-height: 13px !important;
+}
+
+@media (max-width: 650px) {
+    .sidebar,
+    .lecturer-sidebar {
+        width: 100% !important;
+    }
+}
+</style>
+<style id="smartlog-unified-navigation">
+
+.smartlog-main-nav {
+    margin-top: 28px !important;
+    width: 100% !important;
+}
+
+.smartlog-main-nav a {
+    display: flex !important;
+    align-items: center !important;
+
+    width: 100% !important;
+    height: 42px !important;
+
+    margin: 0 0 7px 0 !important;
+    padding: 0 14px !important;
+
+    box-sizing: border-box !important;
+
+    border: 0 !important;
+    border-radius: 8px !important;
+
+    background: transparent !important;
+    color: #e5f5ee !important;
+
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+
+    text-decoration: none !important;
+}
+
+.smartlog-main-nav a:hover {
+    background: rgba(255,255,255,0.08) !important;
+    color: #ffffff !important;
+}
+
+.smartlog-main-nav a.active {
+    background: rgba(255,255,255,0.14) !important;
+    color: #ffffff !important;
+    font-weight: 400 !important;
+}
+
+.sidebar .smartlog-main-nav,
+.lecturer-sidebar .smartlog-main-nav {
+    margin-top: 28px !important;
+}
+</style>
+@include('web.shared.professional-theme')
+@include('web.shared.lecturer-modern-ui')
 </head>
 
 <body>
@@ -445,32 +549,37 @@
 
         </div>
 
-        <nav class="nav">
+        <nav class="smartlog-main-nav">
+    <a href="{{ route('web.lecturer.dashboard') }}"
+       class="{{ request()->routeIs('web.lecturer.dashboard') ? 'active' : '' }}">
+        Dashboard
+    </a>
 
-            <a href="{{ route('web.lecturer.dashboard') }}">
-                Dashboard
-            </a>
+    <a href="{{ route('web.lecturer.units') }}"
+       class="{{ request()->routeIs('web.lecturer.units*') ? 'active' : '' }}">
+        My Units
+    </a>
 
-            <a href="{{ route('web.lecturer.units') }}">
-                My Units
-            </a>
+    <a href="{{ route('web.lecturer.students') }}"
+       class="{{ request()->routeIs('web.lecturer.students*') ? 'active' : '' }}">
+        Students
+    </a>
 
-            <a href="{{ route('web.lecturer.students') }}">
-                Students
-            </a>
+    <a href="{{ route('web.lecturer.student-progress') }}"
+       class="{{ request()->routeIs('web.lecturer.student-progress*') ? 'active' : '' }}">
+        Student Progress
+    </a>
 
-            <a href="{{ route('web.lecturer.verifications') }}">
-                Pending Verifications
-            </a>
+    <a href="{{ route('web.lecturer.verifications') }}"
+       class="{{ request()->routeIs('web.lecturer.verifications*') ? 'active' : '' }}">
+        Pending Verifications
+    </a>
 
-            <a
-                href="{{ route('web.lecturer.student-progress') }}"
-                class="active"
-            >
-                Student Progress
-            </a>
-
-        </nav>
+    <a href="{{ route('web.lecturer.logbooks') }}"
+       class="{{ request()->routeIs('web.lecturer.logbooks*') ? 'active' : '' }}">
+        Clinical Logbooks
+    </a>
+</nav>
 
     </aside>
 
@@ -670,7 +779,7 @@
                                     <td>
 
                                         <strong>
-                                            {{ $student->dwu_id ?: '—' }}
+                                            {{ $student->dwu_id ?: 'â€”' }}
                                         </strong>
 
                                     </td>
@@ -754,7 +863,7 @@
 
                                         @else
 
-                                            <span>—</span>
+                                            <span>â€”</span>
 
                                         @endif
 
@@ -873,3 +982,6 @@
 </body>
 
 </html>
+
+
+
